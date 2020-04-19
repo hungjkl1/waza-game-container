@@ -4,6 +4,7 @@
 
 const path = require('path');
 const webpack = require('webpack');
+const publicPath = process.env.PUBLIC_PATH || '/'
 
 module.exports = options => ({
   mode: options.mode,
@@ -11,8 +12,8 @@ module.exports = options => ({
   output: Object.assign(
     {
       // Compile into js/build.js
-      path: path.resolve(process.cwd(), 'build'),
-      publicPath: '/',
+      path: path.resolve(process.cwd(), `build${publicPath}`),
+      publicPath
     },
     options.output,
   ), // Merge with env dependent settings
@@ -105,6 +106,28 @@ module.exports = options => ({
           },
         },
       },
+      {
+        loader: 'image-webpack-loader',
+        options: {
+          mozjpeg: {
+            enabled: false
+            // NOTE: mozjpeg is disabled as it causes errors in some Linux environments
+            // Try enabling it in your environment by switching the config to:
+            // enabled: true,
+            // progressive: true,
+          },
+          gifsicle: {
+            interlaced: false
+          },
+          optipng: {
+            optimizationLevel: 7
+          },
+          pngquant: {
+            quality: '65-90',
+            speed: 4
+          }
+        }
+      }
     ],
   },
   plugins: options.plugins.concat([
@@ -113,6 +136,10 @@ module.exports = options => ({
     // drop any unreachable code.
     new webpack.EnvironmentPlugin({
       NODE_ENV: 'development',
+    }),
+        new webpack.DefinePlugin({
+      CANVAS_RENDERER: JSON.stringify(true),
+      WEBGL_RENDERER: JSON.stringify(true)
     }),
   ]),
   resolve: {
